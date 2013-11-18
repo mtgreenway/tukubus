@@ -24,6 +24,7 @@ def generate_matrices(hosts, cores):
                 node_tenancies += [tenancy for i in range(len(my_usage))]
             left_over = cores-len(node_usage)
             node_usage += [0.0 for i in range(left_over)]
+            node_tenancies = [10 + (90.0 / tenancy) * (i) for i in node_tenancies]
             node_tenancies += [0 for i in range(left_over)]
             usages.append(node_usage)
             tenancies.append(node_tenancies)
@@ -46,9 +47,15 @@ app = Flask(__name__,static_folder="html", static_url_path="")
 def root():
     return app.send_static_file('index.html')
 
-@app.route('/usage')
-def hello_world():
+
+@app.route('/cpu')
+def cpu_usage():
     return Response(rack_usages(40, 61, 32, 1), mimetype='application/json')
+
+
+@app.route('/usage')
+def occupancy():
+    return Response(rack_usages(40, 61, 32, 0), mimetype='application/json')
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=9001)
