@@ -1,5 +1,7 @@
 import os
 import json
+from flask import Flask
+from flask import Response
 
 def usage(host, stats):
     usage_val = float(stats["cpu_usage"]) / float(stats["cpu_size"])
@@ -30,19 +32,23 @@ def generate_matrices(hosts, cores):
 
 def rack_usages(rack_start, rack_end, cores, index):
     ten_use = generate_matrices(["10.103.114.%s" % i for i in range(rack_start, rack_end)], cores)
-    return "\n".join([",".join([str(ent) for ent in line]) for line in ten_use[index]])
+    #return "\n".join([",".join([str(ent) for ent in line]) for line in ten_use[index]])
+    return json.dumps(ten_use[index])
 
 #print rack_usages(40, 61, 32, 0)
 #print rack_usages(40, 61, 32, 1)
 #rack_usages(4, 39, 8, 0)
 #rack_usages(4, 39, 8, 1)
 
-from flask import Flask
-app = Flask(__name__)
+app = Flask(__name__,static_folder="html", static_url_path="")
 
 @app.route('/')
+def root():
+    return app.send_static_file('index.html')
+
+@app.route('/usage')
 def hello_world():
-    return rack_usages(40, 61, 32, 1)
+    return Response(rack_usages(40, 61, 32, 1), mimetype='application/json')
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=9001)
