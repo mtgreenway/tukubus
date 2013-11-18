@@ -9,7 +9,13 @@
 }
 
 </style>
-<svg class="chart"></svg>
+<svg class="chart sullivan"></svg>
+<svg class="chart sullivan-8"></svg>
+<svg class="chart sullivan-cpu"></svg>
+<svg class="chart sullivan-8-cpu"></svg>
 <script src="http://d3js.org/d3.v3.min.js"></script>
-<script>jsonUrl="/usage/40/61/32";</script>
 <script src="tukubus.js"></script>
+<script>main("/usage/40/61/32", ".sullivan");</script>
+<script>main("/cpu/40/61/32", ".sullivan-cpu");</script>
+<script>main("/usage/4/39/8", ".sullivan-8");</script>
+<script>main("/cpu/4/39/8", ".sullivan-8-cpu");</script>
