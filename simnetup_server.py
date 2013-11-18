@@ -53,9 +53,20 @@ def cpu_usage():
     return Response(rack_usages(40, 61, 32, 1), mimetype='application/json')
 
 
+@app.route('/cpu_8')
+def cpu_usage_8():
+    return Response(rack_usages(4, 39, 8, 1), mimetype='application/json')
+
+
+@app.route('/usage_8')
+def occupancy_8():
+    return Response(rack_usages(4, 39, 8, 0), mimetype='application/json')
+
+
 @app.route('/usage')
 def occupancy():
     return Response(rack_usages(40, 61, 32, 0), mimetype='application/json')
+
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=9001)
