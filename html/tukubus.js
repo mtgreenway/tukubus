@@ -6,7 +6,7 @@ barHeight = 10,
 barHeightSpace = 6,
 width = (barWidth+barWidthSpace)*200,
 height = (barHeight+barHeightSpace)*200;
-jsonUrl = "http://ut.mdmbkr.org/load.json"
+jsonUrl = "/usage"
 transInterval = 3000
 transDuration = 500
 
