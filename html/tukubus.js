@@ -49,7 +49,7 @@ var x = d3.scale.linear()
     .range([0, width]);
 
 function initState(data){
-    var chart = d3.select(".sullivan")
+    var chart = d3.select(".chart")
 	.attr("width", width)
 	.attr("height", height);
 
@@ -57,6 +57,15 @@ function initState(data){
 	.data(data)
 	.enter().append("g")
 	.attr("transform", function(d, i) { return "translate(0, " + (5 + i*(barHeight+barHeightSpace)) + ")"; });
+
+    url_parts = jsonUrl.split("/")
+    url_parts[1] = "nodes"
+    nodeUrl = url_parts.slice(0,-1).join("/")
+
+    d3.json(nodeUrl,
+	    function(error, json){
+                grp.append("svg:title").text(function(d, i){return json[i];});
+	    });
 
     grp.selectAll('rect')
 	.data(function(d) { return d; })

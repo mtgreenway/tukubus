@@ -48,18 +48,17 @@ app = Flask(__name__,static_folder="html", static_url_path="")
 def root():
     return app.send_static_file('index.html')
 
-@app.route('/cpu/<rack_start>/<rack_end>/<cores>')
+@app.route('/cpu/<int:rack_start>/<int:rack_end>/<int:cores>')
 def cpu(rack_start, rack_end, cores):
     return Response(rack_usages(rack_start, rack_end, cores, 1), mimetype='application/json')
 
-@app.route('/usage/<rack_start>/<rack_end>/<cores>')
+@app.route('/usage/<int:rack_start>/<int:rack_end>/<int:cores>')
 def occupancy(rack_start, rack_end, cores):
     return Response(rack_usages(rack_start, rack_end, cores, 0), mimetype='application/json')
 
-@app.route('/nodes/<rack_start>/<rack_end>')
+@app.route('/nodes/<int:rack_start>/<int:rack_end>')
 def nodes(rack_start, rack_end):
     hosts = ["10.103.114.%s" % i for i in range(rack_start, rack_end)]
-    return [entry for entry in os.listdir(".") if entry in hosts]
-
+    return Response(json.dumps([entry for entry in os.listdir(".") if entry in hosts]), mimetype='application/json')
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=9001)
+    app.run(host="0.0.0.0", port=9001, debug=True)
