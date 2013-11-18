@@ -12,6 +12,7 @@ def generate_matrices(hosts, cores):
     usages, tenancies = [], []
     for entry in os.listdir("."):
         if entry in hosts:
+            print entry
             with open(entry) as node:
                json_data = json.loads(node.read())
             tenancy = 0
@@ -47,26 +48,18 @@ app = Flask(__name__,static_folder="html", static_url_path="")
 def root():
     return app.send_static_file('index.html')
 
+@app.route('/cpu/<rack_start>/<rack_end>/<cores>')
+def cpu(rack_start, rack_end, cores):
+    return Response(rack_usages(rack_start, rack_end, cores, 1), mimetype='application/json')
 
-@app.route('/cpu')
-def cpu_usage():
-    return Response(rack_usages(40, 61, 32, 1), mimetype='application/json')
+@app.route('/usage/<rack_start>/<rack_end>/<cores>')
+def occupancy(rack_start, rack_end, cores):
+    return Response(rack_usages(rack_start, rack_end, cores, 0), mimetype='application/json')
 
-
-@app.route('/cpu_8')
-def cpu_usage_8():
-    return Response(rack_usages(4, 39, 8, 1), mimetype='application/json')
-
-
-@app.route('/usage_8')
-def occupancy_8():
-    return Response(rack_usages(4, 39, 8, 0), mimetype='application/json')
-
-
-@app.route('/usage')
-def occupancy():
-    return Response(rack_usages(40, 61, 32, 0), mimetype='application/json')
-
+@app.route('/nodes/<rack_start>/<rack_end>')
+def nodes(rack_start, rack_end):
+    hosts = ["10.103.114.%s" % i for i in range(rack_start, rack_end)]
+    return [entry for entry in os.listdir(".") if entry in hosts]
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=9001)
