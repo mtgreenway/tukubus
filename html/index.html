@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+.chart text {
+  fill: white;
+  font: 10px sans-serif;
+  text-anchor: end;
+}
+
+</style>
+<svg class="chart"></svg>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script>
+
+var randData;
+
+function updateData(){
+    randData = [];
+
+    for (var k = 0; k < 40; k += 1) {
+        var row = []
+           for (var n = 0; n < 32; n += 1) {
+               row.push(255*Math.random())
+           }		    
+        randData.push(row);
+    }
+
+}
+
+var barWidth = 10,
+barWidthSpace = 1,
+barHeight = 10,
+barHeightSpace = 6,
+width = (barWidth+barWidthSpace)*200,
+height = (barHeight+barHeightSpace)*200;
+
+var x = d3.scale.linear()
+    .domain([0, width])
+    .range([0, width]);
+
+function initState(data){
+
+console.log("updating data: " + data[0][0])
+
+var chart = d3.select(".chart")
+    .attr("width", width)
+    .attr("height", height);
+
+var grp = chart.selectAll("g")
+    .data(data)
+  .enter().append("g")
+    .attr("transform", function(d, i) { return "translate(0, " + (5 + i*(barHeight+barHeightSpace)) + ")"; });
+
+grp.selectAll('rect').data(data).exit().remove(); 
+
+grp.selectAll('rect')
+    .data(function(d) { console.log(d); return d; })
+    .enter()
+    .append('rect')
+        .attr('x', function(d, i) { return (barWidth + barWidthSpace) * i; })
+        .attr('width', barWidth)
+        .attr('height', barHeight)
+        .attr('fill', function(d) { return "rgb(0," + Math.round(d) +  ",0)" });
+
+}
+
+function updateState(data){
+var chart = d3.select(".chart")
+
+var grp = chart.selectAll("g")
+    .data(data)
+
+grp.selectAll('rect')
+    .data(function(d) { return d; })
+    .transition()
+    .duration(1000)
+    .attr('fill', function(d) { return "rgb(0," + Math.round(d) +  ",0)" });
+
+}
+
+updateData();
+initState(randData);
+
+setInterval( function(){ updateData(); updateState(randData); }, 5000);
+
+
+</script>
