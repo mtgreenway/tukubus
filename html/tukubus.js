@@ -6,7 +6,9 @@ barHeight = 10,
 barHeightSpace = 6,
 width = (barWidth+barWidthSpace)*200,
 height = (barHeight+barHeightSpace)*200;
-jsonUrl = "/usage"
+jsonUrl = "http://ut.mdmbkr.org/load.json"
+transInterval = 3000
+transDuration = 500
 
 /*function initData(){
     randData = [];
@@ -22,14 +24,13 @@ jsonUrl = "/usage"
 function initData(){
     d3.json(jsonUrl, 
 	    function(error, json){
-		console.log(json);
 		initState(json);
-		setInterval( function() { getData() }, 5000);
+		setInterval( function() { updateData() }, transInterval);
 	    });
 }
 
 
-function getData(){
+function updateData(){
     d3.json(jsonUrl, 
 	    function(error, json){ 
 		updateState(json)
@@ -65,8 +66,6 @@ var grp = chart.selectAll("g")
   .enter().append("g")
     .attr("transform", function(d, i) { return "translate(0, " + (5 + i*(barHeight+barHeightSpace)) + ")"; });
 
-grp.selectAll('rect').data(data).exit().remove(); 
-
 grp.selectAll('rect')
     .data(function(d) { return d; })
     .enter()
@@ -75,20 +74,19 @@ grp.selectAll('rect')
         .attr('width', barWidth)
         .attr('height', barHeight)
         .attr('fill', function(d) { return "rgb(0," + Math.round(d*2.55) +  ",0)" });
-
 }
 
 function updateState(data){
-var chart = d3.select(".chart")
+    var chart = d3.select(".chart")
 
-var grp = chart.selectAll("g")
-    .data(data)
+    var grp = chart.selectAll("g")
+	.data(data)
 
-grp.selectAll('rect')
-    .data(function(d) { return d; })
-    .transition()
-    .duration(1000)
-    .attr('fill', function(d) { return "rgb(0," + Math.round(d*2.55) +  ",0)" });
+    grp.selectAll('rect')
+	.data(function(d) { return d; })
+	.transition()
+	.duration(transDuration)
+	.attr('fill', function(d) { return "rgb(0," + Math.round(d*2.55) +  ",0)" });
 }
 
 initData();
