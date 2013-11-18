@@ -3,6 +3,9 @@ import json
 from flask import Flask
 from flask import Response
 
+def host_sorted(host_list):
+    return sorted(host_list, key=lambda x: int(x.split(".")[-1]))
+
 def usage(host, stats):
     usage_val = float(stats["cpu_usage"]) / float(stats["cpu_size"])
     return [usage_val for _ in range(int(stats["cpu_size"]))]
@@ -10,25 +13,23 @@ def usage(host, stats):
 
 def generate_matrices(hosts, cores):
     usages, tenancies = [], []
-    for entry in os.listdir("."):
-        if entry in hosts:
-            print entry
-            with open(entry) as node:
-               json_data = json.loads(node.read())
-            tenancy = 0
-            node_tenancies = []
-            node_usage = []
-            for stats in json_data:
-                tenancy += 1
-                my_usage = usage(entry, stats)
-                node_usage += my_usage                
-                node_tenancies += [tenancy for i in range(len(my_usage))]
-            left_over = cores-len(node_usage)
-            node_usage += [0.0 for i in range(left_over)]
-            node_tenancies = [10 + (90.0 / tenancy) * (i) for i in node_tenancies]
-            node_tenancies += [0 for i in range(left_over)]
-            usages.append(node_usage)
-            tenancies.append(node_tenancies)
+    for entry in host_sorted([i for i in os.listdir(".") if i in hosts]):
+        with open(entry) as node:
+           json_data = json.loads(node.read())
+        tenancy = 0
+        node_tenancies = []
+        node_usage = []
+        for stats in json_data:
+            tenancy += 1
+            my_usage = usage(entry, stats)
+            node_usage += my_usage                
+            node_tenancies += [tenancy for i in range(len(my_usage))]
+        left_over = cores-len(node_usage)
+        node_usage += [0.0 for i in range(left_over)]
+        node_tenancies = [10 + (90.0 / tenancy) * (i) for i in node_tenancies]
+        node_tenancies += [0 for i in range(left_over)]
+        usages.append(node_usage)
+        tenancies.append(node_tenancies)
     return tenancies, usages
 
 
@@ -59,6 +60,6 @@ def occupancy(rack_start, rack_end, cores):
 @app.route('/nodes/<int:rack_start>/<int:rack_end>')
 def nodes(rack_start, rack_end):
     hosts = ["10.103.114.%s" % i for i in range(rack_start, rack_end)]
-    return Response(json.dumps([entry for entry in os.listdir(".") if entry in hosts]), mimetype='application/json')
+    return Response(json.dumps(host_sorted([entry for entry in os.listdir(".") if entry in hosts])), mimetype='application/json')
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=9001, debug=True)
+    app.run(host="0.0.0.0", port=9001)#, debug=True)
