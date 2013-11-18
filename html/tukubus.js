@@ -19,18 +19,9 @@ jsonUrl = "/usage"
     }
 }*/
 
-function transformColor(jsonArray){
-    return jsonArray.map(function(row) { 
-	return row.map(function(value) { 
-	    return (value / 100)*255;
-	});
-    });
-}
-
 function initData(){
     d3.json(jsonUrl, 
 	    function(error, json){
-		json = transformColor(json);
 		console.log(json);
 		initState(json);
 		setInterval( function() { getData() }, 5000);
@@ -41,7 +32,6 @@ function initData(){
 function getData(){
     d3.json(jsonUrl, 
 	    function(error, json){ 
-		json = transformColor(json);
 		updateState(json)
 	    });
 
@@ -84,7 +74,7 @@ grp.selectAll('rect')
         .attr('x', function(d, i) { return (barWidth + barWidthSpace) * i; })
         .attr('width', barWidth)
         .attr('height', barHeight)
-        .attr('fill', function(d) { return "rgb(0," + Math.round(d) +  ",0)" });
+        .attr('fill', function(d) { return "rgb(0," + Math.round(d*2.55) +  ",0)" });
 
 }
 
@@ -98,7 +88,7 @@ grp.selectAll('rect')
     .data(function(d) { return d; })
     .transition()
     .duration(1000)
-    .attr('fill', function(d) { return "rgb(0," + Math.round(d) +  ",0)" });
+    .attr('fill', function(d) { return "rgb(0," + Math.round(d*2.55) +  ",0)" });
 }
 
 initData();
