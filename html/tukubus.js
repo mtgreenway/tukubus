@@ -1,7 +1,7 @@
-var randData;
-
 var barWidth = 10,
 barWidthSpace = 1,
+unitWidthSpace = 5,
+sepInterval = 8,
 barHeight = 10,
 barHeightSpace = 6,
 width = (barWidth+barWidthSpace)*200,
@@ -10,16 +10,10 @@ height = (barHeight+barHeightSpace)*200;
 transInterval = 3000
 transDuration = 500
 
-/*function initData(){
-    randData = [];
-    for (var k = 0; k < 2; k += 1) {
-        var row = []
-           for (var n = 0; n < 32; n += 1) {
-               row.push(255)
-           }		    
-        randData.push(row);
-    }
-}*/
+
+var colorScale = d3.scale.linear()
+    .range(['#eee', '#0095C7']) // or use hex values
+    .domain([0, 100])
 
 function initData(){
     d3.json(jsonUrl, 
@@ -28,7 +22,6 @@ function initData(){
 		setInterval( function() { updateData() }, transInterval);
 	    });
 }
-
 
 function updateData(){
     d3.json(jsonUrl, 
@@ -56,24 +49,27 @@ var x = d3.scale.linear()
     .range([0, width]);
 
 function initState(data){
+    var chart = d3.select(".sullivan")
+	.attr("width", width)
+	.attr("height", height);
 
-var chart = d3.select(".chart")
-    .attr("width", width)
-    .attr("height", height);
+    var grp = chart.selectAll("g")
+	.data(data)
+	.enter().append("g")
+	.attr("transform", function(d, i) { return "translate(0, " + (5 + i*(barHeight+barHeightSpace)) + ")"; });
 
-var grp = chart.selectAll("g")
-    .data(data)
-  .enter().append("g")
-    .attr("transform", function(d, i) { return "translate(0, " + (5 + i*(barHeight+barHeightSpace)) + ")"; });
-
-grp.selectAll('rect')
-    .data(function(d) { return d; })
-    .enter()
-    .append('rect')
-        .attr('x', function(d, i) { return (barWidth + barWidthSpace) * i; })
+    grp.selectAll('rect')
+	.data(function(d) { return d; })
+	.enter()
+	.append('rect')
+        .attr('x', function(d, i) { 
+	    numBlock = Math.ceil((i+1)/sepInterval);
+	    console.log("i: " + i + " numBlock: " + numBlock);
+	    return (barWidth + barWidthSpace) * i + unitWidthSpace*numBlock; 
+	})
         .attr('width', barWidth)
         .attr('height', barHeight)
-        .attr('fill', function(d) { return "rgb(0," + Math.round(d*2.55) +  ",0)" });
+        .attr('fill', function(d) { return colorScale(d) });
 }
 
 function updateState(data){
@@ -86,7 +82,8 @@ function updateState(data){
 	.data(function(d) { return d; })
 	.transition()
 	.duration(transDuration)
-	.attr('fill', function(d) { return "rgb(0," + Math.round(d*2.55) +  ",0)" });
+	.attr('fill', function(d) { return colorScale(d) });
 }
 
 initData();
+
