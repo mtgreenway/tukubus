@@ -1,5 +1,9 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
+<html>
+<link rel="stylesheet" href="css/bootstrap.css">
+<link rel="stylesheet" href="css/mezzanine.css">
+<link rel="stylesheet" href="css/osdc.css">
 <style>
 
 .chart text {
@@ -9,13 +13,50 @@
 }
 
 </style>
+<body>
+<div class="navbar navbar-fixed-top">
+<div class="navbar-inner">
+<div class="container">
+    <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+    </a>
+           <a class="brand" href="http://www.opensciencedatacloud.org"><img src="logo_sm.png" /></a>
+    <div class="nav-collapse collapse">
+           <ul class="nav">
+         <li class="active">
+           <a href="#occupancy">VMs</a>
+         </li>
+         <li>
+           <a href="#cpu">CPU</a>
+           </li>
+         <li>
+           <a href="#disk">Disk</a>
+           </li>
+       </ul>
+          </div>
+</div>
+</div>
+</div>
+
+<a id="occupancy" />
+<div class="container"> <br/> <br/> <br/> </div>
+<div class="container">
+<h3> Sullivan VM Occupancy </h3>
 <svg class="chart sullivan"></svg>
 <svg class="chart sullivan-8"></svg>
+<a id="cpu" />
+<div class="container"> <br/> <br/> <br/> </div>
+<h3> Sullivan VM CPU Utilization </h3>
 <svg class="chart sullivan-cpu"></svg>
 <svg class="chart sullivan-8-cpu"></svg>
+</div>
 <script src="http://d3js.org/d3.v3.min.js"></script>
 <script src="tukubus.js"></script>
 <script>main("/usage/40/61/32", ".sullivan");</script>
 <script>main("/cpu/40/61/32", ".sullivan-cpu");</script>
 <script>main("/usage/4/39/8", ".sullivan-8");</script>
 <script>main("/cpu/4/39/8", ".sullivan-8-cpu");</script>
+</body>
+</html>
