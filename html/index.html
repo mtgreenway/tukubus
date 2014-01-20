@@ -46,17 +46,39 @@
 <h3> Sullivan VM Occupancy </h3>
 <svg class="chart sullivan"></svg>
 <svg class="chart sullivan-8"></svg>
+</div>
 <a id="cpu" />
 <div class="container"> <br/> <br/> <br/> </div>
+<div class="container">
 <h3> Sullivan VM CPU Utilization </h3>
 <svg class="chart sullivan-cpu"></svg>
 <svg class="chart sullivan-8-cpu"></svg>
 </div>
-<script src="http://d3js.org/d3.v3.min.js"></script>
+
+<div class="container"> <br/> <br/> <br/> </div>
+<div class="container">
+<h3> Sullivan Memory Utilization </h3>
+<svg class="chart sullivan-mem"></svg>
+<svg class="chart sullivan-8-mem"></svg>
+</div>
+
+<a id="disk" />
+<div class="container"> <br/> <br/> <br/> </div>
+<div class="container">
+<h3> Sullivan root disk </h3>
+<svg class="chart sullivan-disk"></svg>
+</div>
+
+<script src="d3.v3.min.js"></script>
 <script src="tukubus.js"></script>
 <script>main("/usage/40/61/32", ".sullivan");</script>
-<script>main("/cpu/40/61/32", ".sullivan-cpu");</script>
 <script>main("/usage/4/39/8", ".sullivan-8");</script>
+<script>main("/cpu/40/61/32", ".sullivan-cpu");</script>
 <script>main("/cpu/4/39/8", ".sullivan-8-cpu");</script>
+<!--
+<script>main("/mem/40/61/32", ".sullivan-mem");</script>
+<script>main("/mem/4/39/8", ".sullivan-8-mem");</script>
+<script>main("/df/root/4/61", ".sullivan-disk");</script>
+-->
 </body>
 </html>

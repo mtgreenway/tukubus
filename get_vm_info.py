@@ -52,9 +52,24 @@ def get_vm_info(host, port):
         d["cpu_usage"] = cpu_per[d["pid"]]
         d["mem_usage"] = mem_per[d["pid"]]
         new_vm_info.append(d)
-    
+
+    try:
+        df_proc = subprocess.Popen("df /", shell=True, stdout=subprocess.PIPE)
+        root_df = df_proc.stdout.readlines()[1].split()[4][:-1]   
+        df_proc = subprocess.Popen("df /exports/gluster", shell=True, stdout=subprocess.PIPE)
+        gluster_df = df_proc.stdout.readlines()[1].split()[4][:-1]   
+    except:
+        root_df = -1
+        gluster_df = -1
+
+    stats = {
+        "vminfo": new_vm_info,
+        "root_df": root_df,
+        "gluster_df": gluster_df
+        }
+
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock.sendto(json.dumps(new_vm_info), (host, port))
+    sock.sendto(json.dumps(stats), (host, port))
 
 
 def main():
