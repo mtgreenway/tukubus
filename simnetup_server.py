@@ -34,7 +34,7 @@ def generate_utilizations(hosts, cores, utype):
             continue
         for stats in json_data["vminfo"]:
             my_usage = usage(entry, stats, utype=utype)
-            node_usage += my_usage                
+            node_usage += my_usage
         left_over = cores-len(node_usage)
         node_usage += [0.0 for i in range(left_over)]
         usages.append(node_usage)
@@ -56,7 +56,7 @@ def generate_matrices(hosts, cores):
         for stats in json_data["vminfo"]:
             tenancy += 1
             my_usage = usage(entry, stats)
-            node_usage += my_usage                
+            node_usage += my_usage
             node_tenancies += [tenancy for i in range(len(my_usage))]
         left_over = cores-len(node_usage)
         node_tenancies = [10 + (90.0 / tenancy) * (i) for i in node_tenancies]
