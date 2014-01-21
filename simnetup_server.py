@@ -25,7 +25,6 @@ def current_node_info(hosts):
             ") group by host order by timestamp;"])
 
     engine = sqlalchemy.create_engine(DB_STRING)
-    print statement
     with engine.begin() as connection:
         results = connection.execute(statement)
         return [(host, json.loads(info)) for host, info in results]
