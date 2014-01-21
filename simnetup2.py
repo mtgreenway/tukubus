@@ -21,6 +21,21 @@ import socket
 import sqlalchemy
 import time
 
+from multiprocessing import Process
+
+def compact(db_string, sleep, wiggle):
+    '''process that compacts the database down to a few entries per hour
+    every hour '''
+    while True:
+        time.sleep(sleep)
+        timestamp = time.time()
+        stmnt = 'DELETE from usage where timestamp < %s and timestamp > %s' % (
+                timestamp - wiggle, (timestamp - sleep) + wiggle)
+        engine = sqlalchemy.create_engine(db_string)
+        with engine.begin() as connection:
+            connection.execute(stmnt)
+
+
 def listen(host, port, db_string):
     ''' Listen for UDP packets with vm usage info then insert those into the
     database'''
@@ -48,8 +63,19 @@ def main():
     parser.add_argument("--port", default=7777)
     parser.add_argument("--db", default='sqlite:///test.db')
     args = parser.parse_args()
+
+    compact_procs = []
+    # keep every minute for the last hour
+    compact_procs.append(Process(target=compact, args=(args.db, 60, 2)))
+    # keep every hour for the last ever
+    compact_procs.append(Process(target=compact, args=(args.db, 3600, 60)))
+    for proc in compact_procs:
+        proc.start()
+
     listen(args.host, args.port, args.db)
 
+    for proc in compact_procs:
+        proc.join()
 
 if __name__ == "__main__":
     main()
