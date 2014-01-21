@@ -22,7 +22,7 @@ def current_node_info(hosts):
 
     statement = "".join(["select host, data from usage where host in (",
             ",".join(["'%s'" % host for host in hosts]),
-            ") group by host order by timestamp;"])
+            ") group by host order by host, timestamp;"])
 
     engine = sqlalchemy.create_engine(DB_STRING)
     with engine.begin() as connection:
