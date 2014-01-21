@@ -1,20 +1,39 @@
-import os
+import argparse
 import json
+import os
+import sqlalchemy
+
 from flask import Flask
 from flask import Response
+
+
+DB_STRING = 'sqlite:///test.db'
 
 def host_sorted(host_list):
     return sorted(host_list, key=lambda x: int(x.split(".")[-1]))
 
 def usage(host, stats, utype="cpu"):
-    usage_val = int(float(stats["%s_usage" % utype]) / float(stats["%s_size" % utype]))
+    usage_val = int(float(stats["%s_usage" % utype]) / float(
+            stats["%s_size" % utype]))
     return [usage_val for _ in range(int(stats["%s_size" % utype]))]
+
+def current_node_info(hosts):
+    ''' Query the database for the current info on nodes listed in hosts'''
+
+    statement = "".join(["select host, data from usage where host in (",
+            ",".join(["'%s'" % host for host in hosts]),
+            ") group by host order by timestamp;"])
+
+    engine = sqlalchemy.create_engine(DB_STRING)
+    print statement
+    with engine.begin() as connection:
+        results = connection.execute(statement)
+        return [(host, json.loads(info)) for host, info in results]
+
 
 def generate_df(disk, hosts):
     dfs = []
-    for entry in host_sorted([i for i in os.listdir(".") if i in hosts]):
-        with open(entry) as node:
-           json_data = json.loads(node.read())
+    for _, json_data in current_node_info(hosts):
         if "%s_df" % disk not in json_data:
             dfs.append([])
             continue
@@ -24,10 +43,7 @@ def generate_df(disk, hosts):
 
 def generate_utilizations(hosts, cores, utype):
     usages = []
-    for entry in host_sorted([i for i in os.listdir(".") if i in hosts]):
-        with open(entry) as node:
-           json_data = json.loads(node.read())
-        node_tenancies = []
+    for entry, json_data in current_node_info(hosts):
         node_usage = []
         if "vminfo" not in json_data:
             usages.append([])
@@ -36,20 +52,17 @@ def generate_utilizations(hosts, cores, utype):
             my_usage = usage(entry, stats, utype=utype)
             node_usage += my_usage
         left_over = cores-len(node_usage)
-        node_usage += [0.0 for i in range(left_over)]
+        node_usage += [0.0 for _ in range(left_over)]
         usages.append(node_usage)
     return usages
 
 
 def generate_matrices(hosts, cores):
     tenancies = []
-    for entry in host_sorted([i for i in os.listdir(".") if i in hosts]):
-        with open(entry) as node:
-           json_data = json.loads(node.read())
+    for entry, json_data in current_node_info(hosts):
         tenancy = 0
         node_tenancies = []
         node_usage = []
-        node_musage = []
         if "vminfo" not in json_data:
             tenancies.append([])
             continue
@@ -65,46 +78,72 @@ def generate_matrices(hosts, cores):
     return [tenancies]
 
 
-def get_usages(rack_start, rack_end, cores, utype):
-    ten_use = generate_utilizations(["10.103.114.%s" % i for i in range(rack_start, rack_end+1)], cores, utype)
+def get_usages(prefix, rack_start, rack_end, cores, utype):
+    hosts = ["%s.%s" % (prefix, i) for i in range(rack_start, rack_end+1)]
+    ten_use = generate_utilizations(hosts, cores, utype)
     return json.dumps(ten_use)
 
 
-def rack_usages(rack_start, rack_end, cores, index):
-    ten_use = generate_matrices(["10.103.114.%s" % i for i in range(rack_start, rack_end+1)], cores)
-    #return "\n".join([",".join([str(ent) for ent in line]) for line in ten_use[index]])
+def rack_usages(prefix, rack_start, rack_end, cores, index):
+    ten_use = generate_matrices(["%s.%s" % (prefix, i)
+            for i in range(rack_start, rack_end+1)], cores)
     return json.dumps(ten_use[index])
 
-#print rack_usages(40, 61, 32, 0)
-#print rack_usages(40, 61, 32, 1)
-#rack_usages(4, 39, 8, 0)
-#rack_usages(4, 39, 8, 1)
 
 app = Flask(__name__,static_folder="html", static_url_path="")
+
+
+def resp(data):
+    ''' Wrap data in flask Response and set mimetype to json'''
+    return Response(data, mimetype='application/json')
+
 
 @app.route('/')
 def root():
     return app.send_static_file('index.html')
 
-@app.route('/cpu/<int:rack_start>/<int:rack_end>/<int:cores>')
-def cpu(rack_start, rack_end, cores):
-    return Response(get_usages(rack_start, rack_end, cores, "cpu"), mimetype='application/json')
 
-@app.route('/mem/<int:rack_start>/<int:rack_end>/<int:cores>')
-def mem(rack_start, rack_end, cores):
-    return Response(get_usages(rack_start, rack_end, cores, "mem"), mimetype='application/json')
+@app.route('/cpu/<prefix>/<int:rack_start>/<int:rack_end>/<int:cores>')
+def cpu(prefix, rack_start, rack_end, cores):
+    return resp(get_usages(prefix, rack_start, rack_end, cores, "cpu"))
 
-@app.route('/usage/<int:rack_start>/<int:rack_end>/<int:cores>')
-def occupancy(rack_start, rack_end, cores):
-    return Response(rack_usages(rack_start, rack_end, cores, 0), mimetype='application/json')
 
-@app.route('/df/<disk>/<int:rack_start>/<int:rack_end>')
-def df(disk, rack_start, rack_end):
-    return Response(json.dumps(generate_df(disk, ["10.103.114.%s" % i for i in range(rack_start, rack_end+1)])), mimetype='application/json')
+@app.route('/mem/<prefix>/<int:rack_start>/<int:rack_end>/<int:cores>')
+def mem(prefix, rack_start, rack_end, cores):
+    return resp(get_usages(prefix, rack_start, rack_end, cores, "mem"))
 
-@app.route('/nodes/<int:rack_start>/<int:rack_end>')
-def nodes(rack_start, rack_end):
-    hosts = ["10.103.114.%s" % i for i in range(rack_start, rack_end+1)]
-    return Response(json.dumps(host_sorted([entry for entry in os.listdir(".") if entry in hosts])), mimetype='application/json')
+
+@app.route('/usage/<prefix>/<int:rack_start>/<int:rack_end>/<int:cores>')
+def occupancy(prefix, rack_start, rack_end, cores):
+    return resp(rack_usages(prefix, rack_start, rack_end, cores, 0))
+
+
+@app.route('/df/<disk>/<prefix>/<int:rack_start>/<int:rack_end>')
+def df(disk, prefix, rack_start, rack_end):
+    return resp(json.dumps(generate_df(disk, ["%s.%s" % (prefix, i)
+            for i in range(rack_start, rack_end+1)])))
+
+
+@app.route('/nodes/<prefix>/<int:rack_start>/<int:rack_end>')
+def nodes(prefix, rack_start, rack_end):
+    hosts = ["%s.%s" % (prefix, i) for i in range(rack_start, rack_end+1)]
+    return resp(json.dumps(host_sorted([entry for entry in os.listdir(".")
+            if entry in hosts])))
+
+
+def main():
+    '''handle args and calls listen() '''
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--host", default="0.0.0.0")
+    parser.add_argument("--port", default=9001)
+    parser.add_argument("--db", default='sqlite:///test.db')
+    parser.add_argument("--debug", action="store_true")
+    args = parser.parse_args()
+
+    global DB_STRING
+    DB_STRING = args.db
+
+    app.run(host=args.host, port=args.port, debug=args.debug)
+
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=9001, debug=True)
+    main()
