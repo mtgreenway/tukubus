@@ -41,14 +41,13 @@ def get_vm_info(host, port):
         cpu_per[i] = 0.0
         mem_per[i] = 0.0
 
-    for proc_section in [procs[i: min(i + 19, len(procs))]
-            for i in range(0, len(procs), 20)]:
+    for proc_section in [procs[i: min(i + 19, len(procs))] for i in range(0, len(procs), 20)]:
 
         top = subprocess.Popen("top -p %s -b -n 1" % ",".join(proc_section),
                 shell=True, stdout=subprocess.PIPE)
         top_output = top.stdout.readlines()
         if len(top_output) < 5:
-            exit(1)
+            continue
 
         for line in top_output[6:-1]:
             info = line.split()
@@ -57,10 +56,10 @@ def get_vm_info(host, port):
                 mem_per[info[0]] += float(info[9])
 
     new_vm_info = []
-    for d in vm_info:
-        d["cpu_usage"] = cpu_per[d["pid"]]
-        d["mem_usage"] = mem_per[d["pid"]]
-        new_vm_info.append(d)
+    for instance in vm_info:
+        instance["cpu_usage"] = cpu_per.get(instance["pid"], 0)
+        instance["mem_usage"] = mem_per.get(instance["pid"], 0)
+        new_vm_info.append(instance)
 
     try:
         df_proc = subprocess.Popen("df /", shell=True, stdout=subprocess.PIPE)
